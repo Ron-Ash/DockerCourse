@@ -1,5 +1,3 @@
-# Docker
-
 ### Definitions
 
 - Docker Image : universal app packager; Dockerfile is the set of instructions needed to create a container/Docker image.
@@ -22,3 +20,25 @@ These 3 features implement the docker/container workflow "Build → Ship → Run
 - https://app.docker.com/
 - https://www.bretfisher.com/kubernetes-vs-docker/
 - https://www.udemy.com/course/docker-mastery
+
+# Docker
+
+## Requirements
+
+## Docker install
+
+## Container Basics
+
+## Image Basics
+
+## Docker Networking
+
+## Docker Volumes
+
+## Docker Compose
+
+# Orchestration
+
+## Docker Swarm
+
+## Kubernetes
