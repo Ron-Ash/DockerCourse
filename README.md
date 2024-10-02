@@ -16,6 +16,7 @@ These 3 features implement the docker/container workflow "Build → Ship → Run
 
 ### Online resources
 
+- https://opencontainers.org/
 - https://www.docker.com/101-tutorial/
 - https://app.docker.com/
 - https://www.bretfisher.com/kubernetes-vs-docker/
@@ -23,9 +24,15 @@ These 3 features implement the docker/container workflow "Build → Ship → Run
 
 # Docker
 
-## Requirements
+## Docker installation
 
-## Docker install
+1. download Docker Desktop (tool for cintainer development) from `https://www.docker.com/products/docker-desktop/` note that "Commercial use of Docker Desktop at a company of more than 250 employees OR more than $10 million in annual revenue requires a paid subscription (Pro, Team, or Business)."
+
+   Docker/Container requires the container image to run on a kernel that was designed for it (i.e. linux on linux and windows on windows, etc.); Thus Docker Desktop will manage the setup, upgrading, deletion, and security of a tiny VM (small linux kernel and container file system) transparantly in the background (true for macOS and Windows).
+
+2. install ubuntu from the microsoft store, open it and create a username/password.
+3. got to `Docker Desktop > Setting > Resources > WSL Integration` and enable ubuntu (this can be done with any other linux distribution).
+4. open ubuntu terminal and run `docker version` to see if downlaod ran successfully.
 
 ## Container Basics
 
