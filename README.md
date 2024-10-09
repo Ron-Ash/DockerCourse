@@ -112,7 +112,8 @@ https://docs.docker.com/reference/dockerfile/
 ### Retaging
 
 1. `docker image tag ubuntu:14.04 rashri/ubuntu:14.04` creates a tag TARGET_IMAGE that refers to SOURCE_IMAGE
-2. `docker push rashri/ubuntu:14.04` uploads image to repository
+2. `docker push rashri/ubuntu:14.04` uploads image to repository (public)
+   - if I want to create a private repository; in dockerHub, create a repository and specify it as private before running th epush command
 
 ## Docker Volumes
 
