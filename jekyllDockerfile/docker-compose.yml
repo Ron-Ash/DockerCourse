@@ -1,0 +1,11 @@
+version: "2"
+
+services:
+  jekyll:
+    image: rashri/jekyll
+    volumes:
+      - ./myblog:/site
+    ports:
+      - "80:4000"
+# `docker compose up` spin up the services
+# `docker compose down` cleanup the services
