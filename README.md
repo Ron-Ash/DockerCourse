@@ -109,6 +109,8 @@ When running a container off of an image, Docker creates a new read/write layer 
 
 https://docs.docker.com/reference/dockerfile/
 
+"Dockerize a Node.js app". Make a Dockerfile, Build it, Test it, Push it, (rm it), Run it (iterative process).
+
 ### Re-taging images
 
 1. `docker image tag ubuntu:14.04 rashri/ubuntu:14.04` creates a tag TARGET_IMAGE that refers to SOURCE_IMAGE
