@@ -137,6 +137,40 @@ CMD [ "/sbin/tini", "--", "node", "./bin/www" ]
 
 ## Docker Volumes
 
+"Containerize Jekyll". Follow the requirments and instructions for https://jekyllrb.com/ so that a jekyll website can be entered as a bind mount (file/directory on host machine is mounted into a container).
+
+Dockerfile :
+
+```Dockerfile
+FROM alpine:latest
+
+# Prerequisites from https://jekyllrb.com/docs/installation/#requirements
+RUN apk update; apk upgrade; apk add build-base ruby-dev ruby
+# install the jekyll and blunder gems
+RUN gem install jekyll bundler && gem cleanup
+# copy entrypoint bash script to local
+COPY entrypoint.sh /usr/local/bin
+# enter volume where jekyll site was created
+WORKDIR /site
+EXPOSE 4000
+# run the bash script which would run bundle install
+ENTRYPOINT [ "entrypoint.sh"]
+# run the command bundle exec jekyll serve --force_polling -H 0.0.0.0 -P 4000
+CMD [ "bundle", "exec", "jekyll", "serve", "--force_polling", "-H", "0.0.0.0", "-P", "4000" ]
+```
+
+entrypoint.sh :
+
+```bash
+#!/bin/sh
+bundle install --retry 5 --jobs 20;
+exec "$@"
+```
+
+...
+
+`docker container run --rm -it -p 80:4000  -v ${pwd}/myblog:/site rashri/jekyll`
+
 ## Docker Compose
 
 # Orchestration
