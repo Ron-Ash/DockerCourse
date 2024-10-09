@@ -109,6 +109,11 @@ When running a container off of an image, Docker creates a new read/write layer 
 
 https://docs.docker.com/reference/dockerfile/
 
+### Retaging
+
+1. `docker image tag ubuntu:14.04 rashri/ubuntu:14.04` creates a tag TARGET_IMAGE that refers to SOURCE_IMAGE
+2. `docker push rashri/ubuntu:14.04` uploads image to repository
+
 ## Docker Volumes
 
 ## Docker Compose
