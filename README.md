@@ -109,11 +109,11 @@ When running a container off of an image, Docker creates a new read/write layer 
 
 https://docs.docker.com/reference/dockerfile/
 
-### Retaging
+### Re-taging images
 
 1. `docker image tag ubuntu:14.04 rashri/ubuntu:14.04` creates a tag TARGET_IMAGE that refers to SOURCE_IMAGE
 2. `docker push rashri/ubuntu:14.04` uploads image to repository (public)
-   - if I want to create a private repository; in dockerHub, create a repository and specify it as private before running th epush command
+   - if I want to create a private repository; in dockerHub, create a repository and specify it as private before running the push command
 
 ## Docker Volumes
 
