@@ -111,6 +111,24 @@ https://docs.docker.com/reference/dockerfile/
 
 "Dockerize a Node.js app". Make a Dockerfile, Build it, Test it, Push it, (rm it), Run it (iterative process).
 
+```Dockerfile
+FROM node:6-alpine
+EXPOSE 3000
+RUN apk add --no-cache tini
+WORKDIR /usr/src/app
+COPY package.json package.json
+RUN npm install && npm cache clean --force
+COPY . .
+CMD [ "/sbin/tini", "--", "node", "./bin/www" ]
+```
+
+- `docker image build -t testnode .` BUILD
+- `docker container run -p 80:3000 --rm testnode` TEST
+- `docker tag testnode rashri/testnode` change tag to fit username
+- `docker push rashri/testnode` upload image to repository
+- `docker image rm rashri/testnode` delete local image
+- `docker container run -p 80:3000 --rm rashri/testnode` test container works when installing it from repository
+
 ### Re-taging images
 
 1. `docker image tag ubuntu:14.04 rashri/ubuntu:14.04` creates a tag TARGET_IMAGE that refers to SOURCE_IMAGE
@@ -126,3 +144,7 @@ https://docs.docker.com/reference/dockerfile/
 ## Docker Swarm
 
 ## Kubernetes
+
+```
+
+```
