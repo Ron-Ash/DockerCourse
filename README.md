@@ -101,7 +101,13 @@ Ever since Docker engine 1.11, multiple containers on a created network can resp
 
 ## Image Basics
 
-## Docker Networking
+Every image starts from the very beginning with a blank layer called "scratch"; then, every set of changes that happens after that on the file system, in the image, is another layer (can be seen by running `docker history image:latest`). These layers are only ever stored once on the file system, meaning that images which use the same layers share them (upload/download only missing layers).
+
+When running a container off of an image, Docker creates a new read/write layer for that container ontop of the image. The storage drive that is used by Docker layers these changes ontop of each other to create the final image/container. When a container/layer changes files from the underlying layers, Docker copies and stores the changed files in the container layer (copy-on-write)
+
+`docker image inspect image` returns the image's metadata.
+
+https://docs.docker.com/reference/dockerfile/
 
 ## Docker Volumes
 
