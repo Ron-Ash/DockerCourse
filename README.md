@@ -135,7 +135,7 @@ CMD [ "/sbin/tini", "--", "node", "./bin/www" ]
 2. `docker push rashri/ubuntu:14.04` uploads image to repository (public)
    - if I want to create a private repository; in dockerHub, create a repository and specify it as private before running the push command
 
-## Docker Volumes
+## Docker Volumes, Bind Mount, and Compose
 
 "Containerize Jekyll". Follow the requirments and instructions for https://jekyllrb.com/ so that a jekyll website can be entered as a bind mount (file/directory on host machine is mounted into a container).
 
@@ -167,18 +167,63 @@ bundle install --retry 5 --jobs 20;
 exec "$@"
 ```
 
-...
+- `docker image build -t jekyll .`
 
-`docker container run --rm -it -p 80:4000  -v ${pwd}/myblog:/site rashri/jekyll`
+Then for operating the containers:
 
-## Docker Compose
+- `docker container run --rm -it -p 80:4000  -v ${pwd}/myblog:/site rashri/jekyll`
+
+or
+
+```yml
+version: "2"
+services:
+  jekyll:
+    build: .
+    image: rashri/jekyll
+    volumes:
+      - ./myblog:/site
+    ports:
+      - "80:4000"
+```
+
+- `docker compose up` spin up the services
+- `docker compose down` cleanup the services
 
 # Orchestration
 
 ## Docker Swarm
 
+Swarm mode is a clustering solution built inside Docker (unrelated to Swarm "classic" for pre-1.12 versions). It is not enabled by default, `docker swarm init`
+
+A "Swarm" consists of one or more nodes, each a VM/pysical-host runnning a distribution of Linux/Windows/etc. running Docker Engine.
+
+![alt text](image-3.png)
+
+Manager nodes have a locally stored database, called the "Raft Database", that stores their configuration and gives them all the information they need to have to be the authority inside a swarm. Each keeps a copy of that database and encrypts their traffic in order to ensure integrity and guarantee the trust that they are able to manage this swarm securely.
+
+Managers issue orders (communicating over the "Control Plane") down for the Worker nodes to complete (managers themselves can also be workers, can be thought of as a Worker with permissions to control the swarm). Workers/Managers can also be demoted/promoted into the two different roles.
+
+### Create a swarm with 1 manager and 2 workers (different OSs)
+
+_can either be entirely through a ubuntu shell or on host machine using Multipass Desktop app and Oracle Virtual Machine, following the exact same steps_
+
+1. `sudo snap install multipass` (same as installing multipass and virtualbox)
+2. Create multipass node with Docker: (`X` should be replace with number identifying between the different nodes)
+   1. run `multipass launch -n nodeX` to create a VM shell.
+   2. Install Docker onto nodeX: (follow https://docs.docker.com/engine/install/ubuntu/)
+      1. run `multipass transfer dockerInstaller.sh nodeX:/home/ubuntu/` to pass the shell commands to set up Docker's Apt repository and (final line in .sh) install the latest version.
+      2. run `multipass shell nodeX` to enter the VM shell.
+      3. run `./dockerInstaller.sh` to run the bash commands.
+      4. run `sudo docker run hello-world` to ensure that the Docker Engine installed successfully.
+3. Repeat 2. three times to create a total of 3 nodes.
+4. run `multipass shell node1` to enter the VM shell "node1".
+5. run `sudo docker swarm init` to initialise a swarm. This will return a command similar to `docker swarm join --token SWMTKN-1-4njjqwo1zb6dmuzsqa1g7uy51n7q7vitvqo9g1cr6l3ro7v1mi-c5j9j7or3i7bap6r1rlp4swmv 10.156.135.175:2377` (will be referenced as `<docker swarm join command>`)
+6. `^D` to logout of node1.
+7. Adding a node as workers to the created swarm.
+   1. run `multipass shell nodeX` to enter the VM shell.
+   2. run `sudo <docker swarm join command>` to add nodeX as a worker to the swarm
+   3. run `^D` to logout of nodeX.
+8. Repeat 7. for node2 and node3.
+
 ## Kubernetes
-
-```
-
-```
