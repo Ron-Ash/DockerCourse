@@ -204,7 +204,7 @@ Manager nodes have a locally stored database, called the "Raft Database", that s
 
 Managers issue orders (communicating over the "Control Plane") down for the Worker nodes to complete (managers themselves can also be workers, can be thought of as a Worker with permissions to control the swarm). Workers/Managers can also be demoted/promoted into the two different roles.
 
-### Create a swarm with 1 manager and 2 workers (different OSs)
+### Create a swarm Multi-node cluster (3 nodes with different OSs)
 
 _can either be entirely through a ubuntu shell or on host machine using Multipass Desktop app and Oracle Virtual Machine, following the exact same steps_
 
@@ -225,5 +225,15 @@ _can either be entirely through a ubuntu shell or on host machine using Multipas
    2. run `sudo <docker swarm join command>` to add nodeX as a worker to the swarm
    3. run `^D` to logout of nodeX.
 8. Repeat 7. for node2 and node3.
+
+#### Promote and Demote nodes
+
+concurrently enter all nodes: (run `multipass shell nodeX`, will make changes easier)
+![alt text](image-4.png)
+
+- run `sudo docker node update --role manager node2` inside `ubuntu@node1` to promote `node2` from a worker to a manager (cannot be leader as only one manager can be leader at a time)
+- run `sudo docker swarm join-token manager` inside `ubuntu@node1` to get the command required by a node to enter the swarm as a manager (remember to `sudo` `docker swarm join --token SWMTKN-1-4njjqwo1zb6dmuzsqa1g7uy51n7q7vitvqo9g1cr6l3ro7v1mi-4drh3knfo5nizws91wurtmsj7 10.156.135.175:2377`).
+- run `sudo` `docker swarm leave` is used to leave a joined swarm
+- run `sudo` `docker node demote node2` inside `ubuntu@node1` to demote `node2` back to worker.
 
 ## Kubernetes
