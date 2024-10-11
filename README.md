@@ -236,4 +236,31 @@ concurrently enter all nodes: (run `multipass shell nodeX`, will make changes ea
 - run `sudo` `docker swarm leave` is used to leave a joined swarm.
 - run `sudo` `docker node demote node2` inside `ubuntu@node1` to demote `node2` back to worker.
 
+![alt text](image-5.png)
+
+1. run `docker network create --driver overlay mydrupal` to create a local network for the future services to talk with one another.
+2. run `docker service create --name psql --network mydrupal -e POSTGRES_PASSWORD=mypass postgres:14` to start a postgresql service.
+3. run `docker service create --name drupal --network mydrupal -p 80:80 drupal:9` to start a drupal service.
+
+#### Open vm ports to host
+
+(help from https://dev.to/arc42/enable-ssh-access-to-multipass-vms-36p7)
+
+1. run `ssh-keygen -C ubuntu -f multipass-ssh-key` to generate a key pair for ssh.
+2. create cloud-init.yaml file:
+   ```yaml
+   users:
+     - default
+     - name: ubuntu
+       sudo: ALL=(ALL) NOPASSWD:ALL
+       ssh_authorized_keys:
+         - <public key from .pub file>
+   ```
+   Note that `-C` and `name:` both use `ubuntu` as this is the default user created & used by multipass (must be used so multipass commands will act on the correct user).
+3. run `multipass launch -n nodeX --cloud-init cloud-init.yaml` to start a VM shell with the cloud-init configuration.
+4. run `multipass ls` to find the IPv4 address of `nodeX`, referenced as `<ip-address>`.
+5. run `sudo ssh ubuntu@<ip-address> -i multipass-ssh-key -o StrictHostKeyChecking=no -L 8080:localhost:80` to connect port `8080` of host machine to port `80` of `nodeX`.
+
+Note that this was tested using `apache2`, achieved by running `sudo apt update; sudo apt install apache2; sudo systemctl start apache2` inside `nodeX` (through either `sudo ssh ubuntu@<ip-address> -i multipass-ssh-key -o StrictHostKeyChecking=no` or `multipass shell nodeX`)
+
 ## Kubernetes

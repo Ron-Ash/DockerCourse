@@ -1,3 +1,5 @@
 # do not upload mastery slides
 slides/*
 unbuntuCredentials.md
+multipass-*
+cloud-init.yaml
