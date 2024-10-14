@@ -259,7 +259,7 @@ concurrently enter all nodes: (run `multipass shell nodeX`, will make changes ea
    Note that `-C` and `name:` both use `ubuntu` as this is the default user created & used by multipass (must be used so multipass commands will act on the correct user).
 3. run `multipass launch -n nodeX --cloud-init cloud-init.yaml` to start a VM shell with the cloud-init configuration.
 4. run `multipass ls` to find the IPv4 address of `nodeX`, referenced as `<ip-address>`.
-5. run `sudo ssh ubuntu@<ip-address> -i multipass-ssh-key -o StrictHostKeyChecking=no -L 8080:localhost:80` to connect port `8080` of host machine to port `80` of `nodeX`.
+5. run `sudo ssh ubuntu@<ip-address> -i multipass-ssh-key -o StrictHostKeyChecking=no -L 8080:<ip-address>:80` to connect port `8080` of host machine (localhost) to port `80` of `nodeX`.
 
 Note that this was tested using `apache2`, achieved by running `sudo apt update; sudo apt install apache2; sudo systemctl start apache2` inside `nodeX` (through either `sudo ssh ubuntu@<ip-address> -i multipass-ssh-key -o StrictHostKeyChecking=no` or `multipass shell nodeX`)
 
