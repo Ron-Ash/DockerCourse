@@ -137,6 +137,20 @@ CMD [ "/sbin/tini", "--", "node", "./bin/www" ]
 
 ## Docker Volumes, Bind Mount, and Compose
 
+Docker utilises "immutable infrastructure", where containers are re-deployed instead of changed (if an update is required, containers are removed and re-deployed).
+
+Databases/unique data (mmutable) should not be mixed in with application (seperation of concerns) as if they are, each re-deploy will wipe all progress.
+
+This issue is known as "Presistent Data", adn Docker has 2 solutions; "Volume" and "Bind Mount".
+
+### Volumes
+
+Volume creates a specialised location outside of a container Unique File System (will be removed when container is removed), hence maintaining it across container removals/re-deploys. These can be attached to any contaienr, with the container seeing it as a normal file path.
+
+### Bind Mount
+
+Bind Mount links the container path to the host machine's path, with the container seeing it as a normal file path.
+
 "Containerize Jekyll". Follow the requirments and instructions for https://jekyllrb.com/ so that a jekyll website can be entered as a bind mount (file/directory on host machine is mounted into a container).
 
 Dockerfile :
@@ -177,6 +191,7 @@ or
 
 ```yml
 version: "2"
+
 services:
   jekyll:
     build: .
@@ -189,6 +204,8 @@ services:
 
 - `docker compose up` spin up the services
 - `docker compose down` cleanup the services
+
+### Compose
 
 # Orchestration
 
@@ -262,5 +279,9 @@ concurrently enter all nodes: (run `multipass shell nodeX`, will make changes ea
 5. run `sudo ssh ubuntu@<ip-address> -i multipass-ssh-key -o StrictHostKeyChecking=no -L 8080:<ip-address>:80` to connect port `8080` of host machine (localhost) to port `80` of `nodeX`.
 
 Note that this was tested using `apache2`, achieved by running `sudo apt update; sudo apt install apache2; sudo systemctl start apache2` inside `nodeX` (through either `sudo ssh ubuntu@<ip-address> -i multipass-ssh-key -o StrictHostKeyChecking=no` or `multipass shell nodeX`)
+
+### Secrets Storage
+
+As of Docker 1.13.0 Swarm Raft DB is encrypted on disk, only stored on disk on Manager nodes (Default is Managers and Workers "control plane" TLS + Mutual Auth). Secrets ar efirst stored in Swarm, and then assigned to a Service(s). These look like files in container but are actually in-memory filesystem (`/run/secrets/<secret_alias>`). Local docker-compose can use file-based secrets, but is not secure.
 
 ## Kubernetes
