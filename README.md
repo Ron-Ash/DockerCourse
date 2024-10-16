@@ -145,11 +145,19 @@ This issue is known as "Presistent Data", adn Docker has 2 solutions; "Volume" a
 
 ### Volumes
 
-Volume creates a specialised location outside of a container Unique File System (will be removed when container is removed), hence maintaining it across container removals/re-deploys. These can be attached to any contaienr, with the container seeing it as a normal file path.
+Volume creates a specialised location outside of a container Unique File System (will be removed when container is removed), hence maintaining it across container removals/re-deploys. These can be attached to any contaienr, with the container seeing it as a normal file path. This can be done:
+
+- In Dockerfile, `VOLUME <path>` is used to setup a new volume location and assing it to the specified `<path>` directory in the container (all files within `<path>` will outlive the container, and require manual deletion).
+
+- By adding `-v <name>:<path>` within the `docker container run` command allows the addition of a named-volume (use friendly-name for ease of use).
+
+- By using the `docker volume create` command allows the specifying of volume drivers.
 
 ### Bind Mount
 
-Bind Mount links the container path to the host machine's path, with the container seeing it as a normal file path.
+Bind Mount links the container path to the host machine's path, with the container seeing it as a normal file path (two locations pointing at the same file(s)). Host files overwrite any in container.
+
+This can only be done at the `docker container run` command (no in Dockerfile) using the absolute path of host instead of the name `-v <host-path>:<container-path>`
 
 "Containerize Jekyll". Follow the requirments and instructions for https://jekyllrb.com/ so that a jekyll website can be entered as a bind mount (file/directory on host machine is mounted into a container).
 
@@ -189,6 +197,8 @@ Then for operating the containers:
 
 or
 
+using a `docker-compose.yml` file:
+
 ```yml
 version: "2"
 
@@ -202,10 +212,14 @@ services:
       - "80:4000"
 ```
 
-- `docker compose up` spin up the services
-- `docker compose down` cleanup the services
+Run
+
+- `docker compose up` to spin-up the services
+- `docker compose down` to clean-up the services
 
 ### Compose
+
+A combination fo a command line tool (`docker compose`) and a configuration file (YAML like above) which allows docker to configure relationships between containers, save the container run settings in an easy-to-read file, and easily run it.
 
 # Orchestration
 
@@ -280,8 +294,31 @@ concurrently enter all nodes: (run `multipass shell nodeX`, will make changes ea
 
 Note that this was tested using `apache2`, achieved by running `sudo apt update; sudo apt install apache2; sudo systemctl start apache2` inside `nodeX` (through either `sudo ssh ubuntu@<ip-address> -i multipass-ssh-key -o StrictHostKeyChecking=no` or `multipass shell nodeX`)
 
+### Stack
+
+A new wlayer of abstraction to Swarm was introduced in Docker 1.13.0; Stack. Stack accept compose files as their declarative definition for services, networks, and volumes (also secrets); created using `docker stack deploy` command (includes overlay network per stack).
+
+```yml
+name: <stack_name>
+
+services:
+  <name1>:
+    image: <name1_image>
+    ports:
+      - "<host-port>:<service-port>"
+    volumes:
+      - <attribute1>:<value1>
+    environment:
+      <enviro_variable1>: <variable1>
+    depends_on:
+      - <nameX>
+    build: <attribute1>:<value1>
+```
+
 ### Secrets Storage
 
 As of Docker 1.13.0 Swarm Raft DB is encrypted on disk, only stored on disk on Manager nodes (Default is Managers and Workers "control plane" TLS + Mutual Auth). Secrets ar efirst stored in Swarm, and then assigned to a Service(s). These look like files in container but are actually in-memory filesystem (`/run/secrets/<secret_alias>`). Local docker-compose can use file-based secrets, but is not secure.
 
 ## Kubernetes
+
+multipass launch -n node1;multipass launch -n node2;multipass launch -n node3;multipass transfer dockerInstaller.sh node1:/home/ubuntu/;multipass transfer dockerInstaller.sh node2:/home/ubuntu/;multipass transfer dockerInstaller.sh node3:/home/ubuntu/
