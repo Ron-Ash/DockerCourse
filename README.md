@@ -294,30 +294,75 @@ concurrently enter all nodes: (run `multipass shell nodeX`, will make changes ea
 
 Note that this was tested using `apache2`, achieved by running `sudo apt update; sudo apt install apache2; sudo systemctl start apache2` inside `nodeX` (through either `sudo ssh ubuntu@<ip-address> -i multipass-ssh-key -o StrictHostKeyChecking=no` or `multipass shell nodeX`)
 
+### Overlay Multi-Host Networking
+
+`--driver overlay` network allows for container-to-container traffic inside a single swarm (optional IPSec, AES, encryption on network creation). Works similar to `--driver bridge` with each service capable of connecting to multiple networks.
+
+The **Routing Mesh** spans all the nodes in the swarm (uses IPVS, Linux Kernel primitives); and allows for routes ingress of incoming pockets for a service to its proper task (service is available through all nodes even though only running on one).
+
+- Containers do not communicate directly to one another's IP adresses; instead they would talk to a Virtual IP address (VIP) that Swarm places infront of all services (private IP inside the virtual network of Swarm). This ensures that the load is distributed amongst all the tasks for a service.
+  ![alt text](image-7.png)
+- External traffic incoming to published ports can choose to hit any of the nodes in the Swarm. Worker nodes then have all of the Swarrm's published ports open and listnening for that container's traffic; and will reroute that traffic to the propoer container based on its load balancing.
+  ![alt text](image-6.png)
+
 ### Stack
 
-A new wlayer of abstraction to Swarm was introduced in Docker 1.13.0; Stack. Stack accept compose files as their declarative definition for services, networks, and volumes (also secrets); created using `docker stack deploy` command (includes overlay network per stack).
+A new layer of abstraction to Swarm was introduced in Docker 1.13.0; Stack. Stack accept compose files as their declarative definition for services, networks, and volumes (also secrets); created using `docker stack deploy` command (includes overlay network per stack). The only differnece between Stack and Compose files is that Stack cannot do `build` (ignores it) while Compose cannot do `deploy` (ignores it):
 
 ```yml
-name: <stack_name>
+version: "3" # has to be >=3 to use stack
 
 services:
-  <name1>:
-    image: <name1_image>
-    ports:
-      - "<host-port>:<service-port>"
+  jekyll:
+    build: .
+    image: rashri/jekyll
     volumes:
-      - <attribute1>:<value1>
-    environment:
-      <enviro_variable1>: <variable1>
-    depends_on:
-      - <nameX>
-    build: <attribute1>:<value1>
+      - ./myblog:/site
+    ports:
+      - "80:4000"
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policay:
+        condition: on-failure
+      placement:
+        contraints: [node.role == manager]
 ```
 
-### Secrets Storage
+![alt text](image-8.png)
 
-As of Docker 1.13.0 Swarm Raft DB is encrypted on disk, only stored on disk on Manager nodes (Default is Managers and Workers "control plane" TLS + Mutual Auth). Secrets ar efirst stored in Swarm, and then assigned to a Service(s). These look like files in container but are actually in-memory filesystem (`/run/secrets/<secret_alias>`). Local docker-compose can use file-based secrets, but is not secure.
+#### Secrets Storage
+
+As of Docker 1.13.0 Swarm Raft DB is encrypted on disk, only stored on disk on Manager nodes (Default is Managers and Workers "control plane" TLS + Mutual Auth). Secrets are first stored in Swarm, and then assigned to a Service(s), and are only seen by them. These look like files in container but are actually in-memory filesystem (`/run/secrets/<secret_alias>`). Local docker-compose can use file-based secrets, but is not secure.
+
+Storing the secret in Swarm can be done in two ways:
+
+1. passing a file through: `docker secret create <name> <file_name_with_secret>` (storing secret on hard drive of the server on the host, should user remoteAPI from the local command line on machine and then pass in the files that way)
+2. passing value at command-line: `echo <secret> | docker secret create <name> -` (secret is going into the history of bash file for root user so if someone gets root credentials, they can get access to the secret). Note that this will then be treated as a file in /run/secrets/.
+
+Assigning secrets to a service can be done through using `docker service create <...> --secret <name> <...>`, which maps the secret to the service so it appears as files inside the container (doesnt tell the service how to use this secret). The offical images from DockerHub settled on a standard that for environment variables, `-e <environment_varaible_name>_FILE=/run/secrets/<name>` is used. This makes it so that during the startup of the image (where it will look for the environment variable) it will pull that file's contents out and use that for the environment variable. This can be also done in a Stack file:
+
+```yml
+version: "3.1" # has to be >=3.1 to use secrets
+
+services:
+  psql:
+    image: postgres
+    secrets:
+      - psql_user
+      - psql_password
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/psql_password
+      POSTGRES_USER_FILE: /run/secrets/psql_user
+
+secrets:
+  psql_user:
+    file: ./psql_user.txt
+  psql_password:
+    external: true # when secret is created outside of the compose file
+```
 
 ## Kubernetes
 
