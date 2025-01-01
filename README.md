@@ -233,6 +233,8 @@ A "Swarm" consists of one or more nodes, each a VM/pysical-host runnning a distr
 
 Manager nodes have a locally stored database, called the "Raft Database", that stores their configuration and gives them all the information they need to have to be the authority inside a swarm. Each keeps a copy of that database and encrypts their traffic in order to ensure integrity and guarantee the trust that they are able to manage this swarm securely.
 
+- There should be an **odd** number of managers to correctly maintain concensus
+
 Managers issue orders (communicating over the "Control Plane") down for the Worker nodes to complete (managers themselves can also be workers, can be thought of as a Worker with permissions to control the swarm). Workers/Managers can also be demoted/promoted into the two different roles.
 
 ### Create a swarm Multi-node cluster (3 nodes with different OSs)
@@ -364,6 +366,76 @@ secrets:
     external: true # when secret is created outside of the compose file
 ```
 
+### Service Updates
+
+Docker Swarm service updates provides rolling replacement (for most changes) of tasks/containers in a service, including rollback, scale and healthcheck (a stack deploy, when pre-existing, will issue service updates).
+
+- `docker service update --image myapp:1.2.1 <servicename>` updates the image used to a newer version
+- `docker service update --evn-add NODE_ENV=production --publish-rm 8080` adding an environment variable and remove port
+- `docker service scale web=8 api=6` change the number of replicas of two services
+- `docker tack deploy -c file.yml <stackname>` same command to update stack, just edit the YAML file
+
+#### healthcheck
+
+`HEALTHCHECK` is supported in Dockerfile, Compose YAML, docker run, and Swarm Services; which has the Docker engine exec a command in the container (e.g. curl localhost) expecting exit 0 (OK) or exit 1 (ERROR) (has 3 status states; starting, healthy, unhealthy).
+
+Healthcheck status shows up in `docker container ls` and the last 5 healthchecks can be seen with `docker container inspect`, however `docker run` does not take action on an exit 1 (unhealthy). Services will, by replacing tasks if they fail the healthcheck waiting on them before continuing.
+
+<table><tr><td>bash</td><td>Dockerfile</td><td>Compose/Stack</td></tr>
+
+<tr><td>
+
+```bash
+$ docker run --health-cmd="curl -f localhost:9200/_cluster/health || false" --health-interval=5s --health-retries=3  --health-timeout=2s --health-start-period=15s elasticsearch:2
+```
+
+</td><td>
+
+```Dockerfile
+HEALTHCHECK --interval=30S --timeout=30S --start-period=0S --retries=3 CMD curl -f http://localhost/ || exit 1
+```
+
+</td><td>
+
+```yml
+version: "2.1" # minimum
+services
+  web:
+    image: ngnix
+    healthcheck:
+      test: ["CMD","curl","-f","http://localhost"]
+      interval: 1m30S
+      timeout: 10S
+      start_period: 1m
+      retries: 3 # version 3.4 minimum
+```
+
+</td></tr></table>
+
 ## Kubernetes
 
-multipass launch -n node1;multipass launch -n node2;multipass launch -n node3;multipass transfer dockerInstaller.sh node1:/home/ubuntu/;multipass transfer dockerInstaller.sh node2:/home/ubuntu/;multipass transfer dockerInstaller.sh node3:/home/ubuntu/
+Kubernetes (k8s) is the most popular 3rd party container orchestator, running on top of Docker (usually) as a set of APIs in containers (Kubectl). It provides API/CLI to manage containers across servers. While it is harder to develop and deploy the Docker Swarm, it has more features and flexability.
+
+![alt text](image-9.png)
+
+**Masters** act similarly to Swarm's managers but require explicit configurations of independent tools to achieve the same functionality. Similar to Swarm's managers, masters need to be in a odd numbered group to keep concensus; together they form the **control plane**.
+
+- **etcd** is a distributed storage system used by kubernetes which uses raft algorithm for concensus (Consistent and highly-available key value store for all API server data).
+- **kube-apiserver** defines how users talk to the cluster and issue orders to it (The core component server that exposes the Kubernetes HTTP API).
+- **kube-scheduler** controlls how and where the containers are placed in objects called pods (basic unit of deployment) on the nodes (Looks for Pods not yet bound to a node, and assigns each Pod to a suitable node).
+- **kube-controller-manager** looks at the entire state of the cluster, and determines whether something needs to be changed to fit the specified state defined by the user (Runs controllers to implement Kubernetes API behavior).
+
+Additionally, **core dns** can be added to provide a cluster-wide DNS resolution.
+
+Node components run on every node, maintaining running pods and providing the Kubernetes runtime environment:
+
+- **kubelet** ensures that Pods are running, including their containers.
+- **kube-proxy** maintains network rules on nodes to implement Services.
+
+A **Pod** is one or more containers running together on one node (containers are always in pods). Pods/Containers are not deployed directly in kubernetes, instead **Controllers** (differencing engine) are defined such that they will create/update pods, etc. to achieve the user definition. A **service** in kubernetes is the defining of a persistent network endpoint in the cluster so everything else can access the set of pods at a specific DNS name:port. **Namespace** is a filter on view in the commandline, filtering groups of objects in a cluster.
+
+### Run, Create, and Apply
+
+references: https://kubernetes.io/docs/reference/kubectl/docker-cli-to-kubectl/ , https://kubernetes.io/docs/reference/kubectl/quick-reference/
+
+![alt text](image-10.png)
