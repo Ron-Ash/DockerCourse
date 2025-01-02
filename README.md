@@ -439,3 +439,9 @@ A **Pod** is one or more containers running together on one node (containers are
 references: https://kubernetes.io/docs/reference/kubectl/docker-cli-to-kubectl/ , https://kubernetes.io/docs/reference/kubectl/quick-reference/
 
 ![alt text](image-10.png)
+
+`kubectl run nginx --image nginx --command -- <cmd> <arg>` will create a single stand-alone pod running ngnix (similar to how `docker run` creates a single stand-alone container); `kubectl create deployment nginx --image nginx -- <cmd> <arg>` instead creates a "deployment" which manages a set of Pods to run an application workload, providing declarative updates for Pods and ReplicaSets.
+
+The desired state is described in a Deployment, and the Deployment Controller (kube-controller-manager) changes the actual state to the desired state at a controlled rate.
+
+`kubectl scale deploy nginx --replicas 2` changes the Deployment's record, which is detected by kube-controller-manager which in-turn changes the number of Pods in ReplicaSet. kube-scheduler then sees a new pod is requested, and will asign a node to it. That node's kublet, seeing the new pod, communicates with the container runtime to start a new nginx instance.
