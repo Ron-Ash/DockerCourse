@@ -445,3 +445,27 @@ references: https://kubernetes.io/docs/reference/kubectl/docker-cli-to-kubectl/ 
 The desired state is described in a Deployment, and the Deployment Controller (kube-controller-manager) changes the actual state to the desired state at a controlled rate.
 
 `kubectl scale deploy nginx --replicas 2` changes the Deployment's record, which is detected by kube-controller-manager which in-turn changes the number of Pods in ReplicaSet. kube-scheduler then sees a new pod is requested, and will asign a node to it. That node's kublet, seeing the new pod, communicates with the container runtime to start a new nginx instance.
+
+`kubectl expose` creates a service (persistent, stable address for pods) for existing pods (mapping service by name is resolved using CoreDNS).
+
+- **ClusterIP** (default): a single, internal virtual IP address allocation within kubernetes only reachable from within the cluster (nodes and pods) on the specified app port number.
+- **NodePort**: High port allocated to each node (reachable from every node's IP) that can be accessed by anyone (if can reach node).
+- **LoadBalancer**: controls a loadbalancer endpoint external to the cluster. Automatically creates ClusterIPs and NodePorts; then talk to the external loadbalancer system (AWS, etc.) provided by an infrastructure provider (talk with kubernetes through remote API), telling it to talk to the NodePorts to set up a loadbalancer.
+- **ExternalName**: Adds CNAME DNS record to CoreDNS only. Not used for pods, but for giving pods a DNS name to use for something outside kubernetes.
+
+### Declerative objects
+
+`kubectl apply -f <file.yml|myyaml/|https://bret.run/pod.yml>` command is used to create, update, or edit a something within kubernetes (similar to `docker stack deploy`) for a YAML file, directory, or URL. Kubernetes configuration files can be written in YAML (easier) or JSON, with each file containing one or more manifests (description of an API object like deployment, job, sercret, etc.).
+
+```yml
+apiVersion: v1|apps/v1|... # found by running `kubectl api-resources` under "APIGROUP/APIVERSION". Can also find the supported APIs via `kubectl api-versions`
+kind: Pod|Deployment|Service|... # same as above under "KIND"
+metadata:
+  name: <object-name> # only name is required for metadata
+spec:
+  # dependent on the resource specified
+  # find attributes through running `kubectl explain services.spec[.<attribute>]`
+--- # required to seperate individual manifests
+# apiVersion: ...
+# docs at kubernetes.io/docs/reference/#api-reference
+```
