@@ -469,3 +469,17 @@ spec:
 # apiVersion: ...
 # docs at kubernetes.io/docs/reference/#api-reference
 ```
+
+### Storage in Kubernetes
+
+DB-as-a-service whenever possible. `Volumes` can be created by adding it to the `spec:` and is tied to the lifecycle of a _pod_ (percistant with _pod_-level); with all _containers_ in a single _pod_ are able to share the _volumes_ among themselves. `PresistentVolumes` are created at the _cluster_ level, seperate from the _pod_, and thereby is able outlive it. It is able to be shared by multiple _pods_.
+
+**_Container Storage Interface_** (CSI) plugins are the new way to connect to storage. It is a standard storage vendors use so kubernetes binaries and their drivers could be independently developed, as well as provide a universal API for utilising storage.
+
+### Ingress Controller
+
+Ingress is a specific resource (not neccessarily a load balancer) that facilitate 3rd party proxies (nginx, traefik, HAProxy, F5, etc.) to route outside connections based on hostname/url.
+
+### CRD's and The Operator Pattern
+
+3rd party Resources and COntrollers can be added to kubernetes as well as 3rd party extensions to the Kubernetes API and CLI. The Operator pattern was then developed to automate deployment and managment of complex apps.
